@@ -1,0 +1,12 @@
+exports.CAC = require('../assets/images/1.jpg');
+exports.CAD = require('../assets/images/2.jpg');
+exports.CAE = require('../assets/images/3.jpg');
+exports.CAE = require('../assets/images/4.jpg');
+exports.CAE = require('../assets/images/5.jpg');
+exports.CAE = require('../assets/images/6.jpg');
+exports.CAE = require('../assets/images/7.jpg');
+exports.CAE = require('../assets/images/8.jpg');
+exports.CAE = require('../assets/images/9.jpg');
+exports.CAE = require('../assets/images/10.jpg');
+exports.CAE = require('../assets/images/11.jpg');
+exports.CAE = require('../assets/images/12.jpg');
