@@ -1,14 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Picker, AsyncStorage } from 'react-native';
-import { Constants } from 'expo';
 import Datastore from 'react-native-local-mongodb';
-
-// const db = new Datastore({
-//   filename: 'asyncStorageKey',
-//   storage: AsyncStorage
-// });
-
-// === or ===
 
 db = new Datastore({ filename: 'asyncStorageKey', autoload: true });
 
@@ -16,55 +8,11 @@ class LogoTitle extends React.Component {
   render() {
     return (
       <Text style={styles.headerText}>
-      DetailsScreen
+      Product details
      </Text>
     );
   }
 }
-
-// async function _getData(key){
-//   try 
-//   {
-//     const value = await AsyncStorage.getItem(key).then(val => {
-//     console.log('Val is ' + val);
-//     //this.setState({requestItems:val});
-//     return JSON.parse(val)
-//   });
-//    // return JSON.parse(value)
-//   } 
-//   catch (err) 
-//   {
-//        throw err
-//   }
-// }
-
-// async function _removeValue(key){
-//   try 
-//   {
-//     await AsyncStorage.removeItem(key)
-//     console.log('Item deleted.');
-//   } 
-//   catch(e) 
-//   {
-//     console.error('ERROR while remove item' + e.message);
-//   }
-
-//   console.log('Done removing')
-// }
-
-// _storeData = async (item, key) => {
-//   try 
-//   {
-//       await AsyncStorage.setItem(key, JSON.stringify(item));
-//       //await AsyncStorage.setItem('@request_Key', this.state.product);
-//   } 
-//   catch (error) 
-//   {
-//       console.error('ERROR: while saving details item ' + error.message);
-//   }
-
-//   console.log('Done saving')
-// }
 
 export default class DetailsScreen extends React.Component {
   constructor(props) {
@@ -77,30 +25,6 @@ export default class DetailsScreen extends React.Component {
     };
   }
   
-  // _saveChanges = (item) => {
-  //   _getData('@request_Key')
-  //   .then( value => {
-  //       console.log('Value is: ' + value)
-  //       if(typeof value !== 'undefined')
-  //       {
-  //         this.state.savedItems.push(value);
-  //         // this.setState({saveItems: value}) // or code.toString().. depends on what you stored
-  //         console.log("Saved items: " + this.state.saveItems);
-  //       }
-  //       else
-  //       {
-  //         console.log('Not value in @request key')
-  //       }
-  //   });
-
-  //   this.state.savedItems.push(item);
-  //   console.log('New array: ' + this.state.savedItems)
-
-  //   _removeValue('@request_Key');
-
-  //   _storeData(this.state.savedItems, '@request_Key')
-  // }
-
   static navigationOptions = {
     headerTitle: <LogoTitle />,
   };
@@ -123,12 +47,12 @@ export default class DetailsScreen extends React.Component {
           <View style={styles.buttonsView}>
             <TouchableOpacity style={styles.basketButton} activeOpacity={0.5} onPress={() => {
               let saveItem = this.props.navigation.state.params.product;
-              saveItem.count = this.state.productCount;
+              for (let i =0; i < this.state.productCount; i++){
+                db.insert(saveItem, function (err, newDoc) {
+                  console.log('Added doc is ' +  newDoc)
+                })
+              }
               console.log("Saved item is " + JSON.stringify(saveItem))
-              db.insert(saveItem, function (err, newDoc) {
-                console.log('Added doc is ' +  newDoc)
-              })
-              
               }}>
               <Image style={styles.imageIconStyle} source={require('../assets/images/basket.png')}></Image>
               <Text style={styles.basketButtonText}>Add to basket</Text>
@@ -155,13 +79,15 @@ export default class DetailsScreen extends React.Component {
             </View>
           </View>
           <View>
-            <Text>Product description</Text>
-            <Text>{this.state.product.description}</Text>
+          <View style={styles.descriptionView}>
+              <Text style={styles.descriptionHeader}>Description</Text>
+              <Text style={styles.descriptionText}>{this.state.product.description}</Text>
+          </View>
           </View>
           </View>);
           break;
       
-        case 'Basket':  // if (x === 'value2')
+        case 'Basket':  
           return (<View style={styles.container}>
             <View style={styles.mainView}>
               <Image source={{ uri: this.state.product.src }} style={styles.productPicture}/>
@@ -173,9 +99,9 @@ export default class DetailsScreen extends React.Component {
                 <Text style={styles.productPriceText}>{this.state.product.price}</Text>
               </View>
             </View>
-            <View>
-              <Text>Product description</Text>
-              <Text>{this.state.product.description}</Text>
+            <View style={styles.descriptionView}>
+              <Text style={styles.descriptionHeader}>Description</Text>
+              <Text style={styles.descriptionText}>{this.state.product.description}</Text>
             </View>
             </View>);
         break
@@ -192,10 +118,10 @@ export default class DetailsScreen extends React.Component {
               <Text style={styles.productPriceText}>{this.state.product.price}</Text>
             </View>
           </View>
-          <View>
-            <Text>Product description</Text>
-            <Text>{this.state.product.description}</Text>
-          </View>
+          <View style={styles.descriptionView}>
+              <Text style={styles.descriptionHeader}>Description</Text>
+              <Text style={styles.descriptionText}>{this.state.product.description}</Text>
+            </View>
           </View>);
         break;
     }
@@ -206,7 +132,7 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FAFAFA',
     width: Dimensions.get('window').width,
     flexDirection: 'column',
   },
@@ -240,7 +166,6 @@ const styles = StyleSheet.create({
   basketButton:{
     width: 135,
     flexDirection: 'row',
-    //alignItems: 'center',
     borderWidth: 0.5,
     borderColor: '#fff',
     height: 40,
@@ -355,5 +280,23 @@ const styles = StyleSheet.create({
   arrow: {
     textAlign: 'center',
     color: 'black',
+  },
+
+  descriptionView: {
+    flexDirection: 'column',
+    margin: 5,
+  },
+
+  descriptionHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'normal',
+  },
+
+  descriptionText: {
+    textAlign: 'auto',
+    fontSize: 14,
+    fontFamily: 'Roboto',
+    fontWeight: 'normal',
   }
 });

@@ -3,13 +3,16 @@ import {
   Image,
   Platform,
   TouchableHighlight,
-  ScrollView,
   StyleSheet,
   Text,
   View,
   FlatList, 
   Dimensions
 } from 'react-native';
+
+import { SearchBar } from 'react-native-elements';
+
+import _ from 'lodash';
 
 import resources from '../data/data.json';
 
@@ -28,9 +31,6 @@ const formatData = (data, numColumns) => {
 
 const numColumns = 3;
 
-
- 
-
 class LogoTitle extends React.Component {
   render() {
     return (
@@ -46,13 +46,39 @@ export default class StoreScreen extends React.Component {
     super(props);
     this.state = {
       product: '',
-      sender: 'Store'
+      sender: 'Store',
+      query: '',
+      products: resources.slice(),
     };
+    this.arrayholder = resources.slice();
   }
 
   static navigationOptions = {
     headerTitle: <LogoTitle />,
   };
+
+  query = text => {
+    console.log(text);
+  };
+  clear = () => {
+    this.query.clear();
+  };
+
+  renderHeader = () =>{
+    return (<SearchBar
+      placeholder="Type Here..."
+      lightTheme 
+      round
+      onChangeText={text => this.searchFilterFunction(text)}
+      onClear={text => this.searchFilterFunction('')}
+      onCancel={text => this.searchFilterFunction('')}
+      autoCorrect={false}
+      value= {this.state.query}
+      platform= "ios"
+      containerStyle={styles.searchBar}
+      //style={styles.searchBar} 
+    />)
+  } 
 
   componentDidMount() 
   {
@@ -68,33 +94,58 @@ export default class StoreScreen extends React.Component {
     if (item.empty === true) {
       return <View style={[styles.item, styles.itemInvisible]}></View>;
     }
-    return (
-      <View style={styles.item}>
-        <TouchableHighlight onPress={() => {
-          navigate('Details', {product : item, routing : this.state.sender})
-          }}>
-          <Image
-              source={{ uri: item.src }} style={styles.itemPicture}
-          />
-        </TouchableHighlight>
-          <Text style={styles.itemText}>{item.model}</Text>
-          {/* <Text style={styles.itemText}>{item.style}</Text>
-          <Text style={styles.itemText}>{item.price}</Text> */}
-      </View>
-    );
+    else{
+      let modelName;
+      if(item.model.length > 30)
+      {
+        modelName = item.model.slice(0, 25)
+        modelName += "..."
+      }
+      else{
+        modelName = item.model;
+      }
+      return (
+        <View style={styles.item}>
+          <TouchableHighlight onPress={() => {
+            navigate('Details', {product : item, routing : this.state.sender})
+            }}>
+            <Image
+                source={{ uri: item.src }} style={styles.itemPicture}
+            />
+          </TouchableHighlight>
+            <Text style={styles.itemText}>{modelName}</Text>
+        </View>
+      );
+    }
   };
+
+  searchFilterFunction = text => {
+      const newData = this.arrayholder.filter(item => {      
+        const itemData = `${item.model.toUpperCase()}`;
+        
+        const textData = text.toUpperCase();
+        return itemData.indexOf(textData) > -1;    
+      });
+      console.log("new Data ", newData);
+      this.setState({ 
+        products: newData,
+        query : text,
+      }); 
+  };
+  
 
   render() {
     const { navigate } = this.props.navigation
-
     return ( 
           <View style={styles.container}>
+          
               <FlatList
-                data={formatData(resources, numColumns)}
+                data={formatData(this.state.products, numColumns)}
                 style={styles.container}
                 renderItem={this.renderItem}
                 numColumns={numColumns}
                 keyExtractor={this._keyExtractor}
+                ListHeaderComponent = {this.renderHeader}
               />
           </View>
     );
@@ -107,76 +158,26 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    marginTop: 5,
+    backgroundColor: '#FAFAFA',
+    //marginTop: 5,
   },
 
   headerText: {
     alignItems: "center",
     fontSize: 18,
-  },
-
-  contentContainer: {
-    paddingTop: 30,
-  },
- 
-  codeHighlightContainer: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 3,
-    paddingHorizontal: 4,
-  },
-  
-  tabBarInfoContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: 'black',
-        shadowOffset: { height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 20,
-      },
-    }),
-    alignItems: 'center',
-    backgroundColor: '#fbfbfb',
-    paddingVertical: 20,
-  },
-  tabBarInfoText: {
-    fontSize: 17,
-    color: 'rgba(96,100,109, 1)',
-    textAlign: 'center',
-  },
-  navigationFilename: {
-    marginTop: 5,
-  },
-  helpContainer: {
-    marginTop: 15,
-    alignItems: 'center',
-  },
-  helpLink: {
-    paddingVertical: 15,
-  },
-
-  helpLinkText: {
-    fontSize: 14,
-    color: '#5F225F',
+    marginLeft: 10,
   },
 
   item: 
   {
-    backgroundColor: '#E5E5DC',
+    backgroundColor: '#FFFFFF',
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#919191',
+    borderColor: '#D5D5D5',
     flex: 1,
     margin: 5,
-    marginTop: 10,
-    width: Dimensions.get('window').width / numColumns,
+    //marginTop: 10,
+    width: Dimensions.get('window').width / numColumns - 10,
     height: 175,
   },
 
@@ -186,6 +187,7 @@ const styles = StyleSheet.create({
     width: '100%',
     fontSize: 12,
     justifyContent: 'center',
+    margin: 5,
   },
 
   itemPicture: 
@@ -197,6 +199,16 @@ const styles = StyleSheet.create({
     width: '100%',
     resizeMode: 'cover',
     backgroundColor: '#FAEEDD',
-  }
+  },
 
+  itemInvisible: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+  },
+
+  searchBar : {
+    backgroundColor : "#FAFAFA",
+    margin: 0,
+  }
+  
 });
