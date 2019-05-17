@@ -84,6 +84,20 @@ export default class StoreScreen extends React.Component {
   {
     var Datastore = require('react-native-local-mongodb'), 
     db = new Datastore({ filename: 'asyncStorageKey', autoload: true });
+    db.remove({}, { multi: true }, function (err, numRemoved) {
+      resources.forEach(element => {
+        db.find({ id: element.id }, function (err, docs) {
+          if (docs.length === 0){
+            db.insert(element, function (err, newDoc) {
+              console.log('New doc is ', newDoc);
+            });
+          }
+        });
+        })
+        db.find({}, function (err, docs) {
+          console.log('All docs is ', docs);
+        });
+    });
   }
 
   _keyExtractor = (item) => item.id;
@@ -107,7 +121,10 @@ export default class StoreScreen extends React.Component {
       return (
         <View style={styles.item}>
           <TouchableHighlight onPress={() => {
-            navigate('Details', {product : item, routing : this.state.sender})
+            let self = this;
+            db.find({ id: item.id }, function (err, docs) {
+              navigate('Details', {product : docs[0], routing : self.state.sender})
+            });
             }}>
             <Image
                 source={{ uri: item.src }} style={styles.itemPicture}
@@ -133,12 +150,9 @@ export default class StoreScreen extends React.Component {
       }); 
   };
   
-
   render() {
-    const { navigate } = this.props.navigation
     return ( 
           <View style={styles.container}>
-          
               <FlatList
                 data={formatData(this.state.products, numColumns)}
                 style={styles.container}
@@ -149,9 +163,7 @@ export default class StoreScreen extends React.Component {
               />
           </View>
     );
-  }
-
- 
+  };
 }
 
 const styles = StyleSheet.create({

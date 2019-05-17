@@ -19,7 +19,7 @@ export default class DetailsScreen extends React.Component {
     super(props);
     this.state = {
       product: props.navigation.state.params.product,
-      productCount: '1',
+      productCount: 1,
       routing: props.navigation.state.params.routing,
       savedItems: [],
     };
@@ -47,12 +47,11 @@ export default class DetailsScreen extends React.Component {
           <View style={styles.buttonsView}>
             <TouchableOpacity style={styles.basketButton} activeOpacity={0.5} onPress={() => {
               let saveItem = this.props.navigation.state.params.product;
-              for (let i =0; i < this.state.productCount; i++){
-                db.insert(saveItem, function (err, newDoc) {
-                  console.log('Added doc is ' +  newDoc)
-                })
-              }
-              console.log("Saved item is " + JSON.stringify(saveItem))
+              //let countOfProd = this.state.productCount;
+              db.update({ id: saveItem.id }, { $inc: { count: Number(this.state.productCount) } }, {}, function (err, numReplaced, affectedDocuments) {
+                console.log('Count of updating ',  numReplaced)
+                console.log('Updating docs ', affectedDocuments);
+              });
               }}>
               <Image style={styles.imageIconStyle} source={require('../assets/images/basket.png')}></Image>
               <Text style={styles.basketButtonText}>Add to basket</Text>
@@ -62,16 +61,16 @@ export default class DetailsScreen extends React.Component {
                 selectedValue={this.state.productCount}
                 itemStyle={styles.pickerItem}
                 onValueChange={(itemValue) => this.setState({productCount: itemValue})}>
-                <Picker.Item label="1" value="1" />
-                <Picker.Item label="2" value="2" />
-                <Picker.Item label="3" value="3" />
-                <Picker.Item label="4" value="4" />
-                <Picker.Item label="5" value="5" />
-                <Picker.Item label="6" value="6" />
-                <Picker.Item label="7" value="7" />
-                <Picker.Item label="8" value="8" />
-                <Picker.Item label="9" value="9" />
-                <Picker.Item label="10" value="10" />
+                <Picker.Item label="1" value='1' />
+                <Picker.Item label="2" value='2' />
+                <Picker.Item label="3" value='3' />
+                <Picker.Item label="4" value='4' />
+                <Picker.Item label="5" value='5' />
+                <Picker.Item label="6" value='6' />
+                <Picker.Item label="7" value='7' />
+                <Picker.Item label="8" value='8' />
+                <Picker.Item label="9" value='9' />
+                <Picker.Item label="10" value='10' />
               </Picker>
               <View style={styles.arrowWrapper}>
                 <Text style={styles.arrow}>&#9660;</Text>

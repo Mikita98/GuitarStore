@@ -2,8 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, View, Alert, Dimensions, FlatList, Text, Image, TouchableHighlight, SwipeableFlatList} from 'react-native';
 import Datastore from 'react-native-local-mongodb';
 import Swipeout from 'react-native-swipeout'
-import withBadge from "../components/withBadge";
-import { Icon } from "react-native-elements";
+
 
 db = new Datastore({ filename: 'asyncStorageKey', autoload: true });
 
@@ -42,6 +41,16 @@ class FlatListItem extends React.Component{
 
   render() 
   {
+    let modelName;
+    if(this.props.item.model > 30)
+      {
+        this.modelName = this.props.item.model.slice(0, 16)
+        this.modelName += "..."
+      }
+      else
+      {
+        this.modelName = this.props.item.model
+      }
     const swipeSettings = {
         autoClose:true,
         right : [
@@ -55,12 +64,15 @@ class FlatListItem extends React.Component{
                   [
                     {text: 'No', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
                     {text: 'Yes', onPress: () => {
-                      db.remove({ _id: self.props.item._id }, {}, function (err, numRemoved) {
-                        console.log('Deleting item is ' + JSON.stringify(self.props.item))
-                        console.log('Count of deleted ' + numRemoved);
+                      db.update({ id: self.props.item.id }, { $inc: { count: -1 } }, {}, function (err, numReplaced) {
+                        console.log('Count of updating ',  numReplaced)
+                        self.props.parentFlatList.refreshFlatList(deletingRow);
+                            console.log("Changing row is " + deletingRow)
+                        db.find({ id: self.props.item.id }, function (err, docs) {
+                          console.log('Updating docs ', docs);
+                        });
                       });
-                      self.props.parentFlatList.refreshFlatList(deletingRow);
-                      console.log("Deleting row is " + deletingRow)
+                      
                     }},
                   ],
                   {cancelable: true}
@@ -85,11 +97,11 @@ class FlatListItem extends React.Component{
                       source={{ uri: this.props.item.src }} style={styles.itemPicture}
                   />
                   <View style={styles.itemInfo}> 
-                    <Text style={styles.itemModel}>{this.props.item.model}</Text>
+                    <Text style={styles.itemModel}>{this.modelName.slice(0, 16) + "..."}</Text>
                     <Text style={styles.itemPrice}>{this.props.item.price}</Text>
                   </View> 
                   <View style={styles.arrowWrapper}>
-                      <Text style={styles.arrow}>&#9655;</Text>
+                      <Text style={styles.arrow}>{this.props.item.count}</Text>
                     </View>
               </View>
             </TouchableHighlight>
@@ -111,6 +123,7 @@ export default class BasketScreen extends React.Component {
       items: '',
       loaded: false, // track if items not loaded
       deletedRowKey: null, // number of row need to delete
+      changeRowKey: null,
     };
     this.componentDidMount = this.componentDidMount.bind(this);
   }
@@ -133,7 +146,7 @@ export default class BasketScreen extends React.Component {
   load = () => { //download items from db
     let self = this;
     let temp = [];
-    db.find({}, function (err, docs) 
+    db.find({ $not: { count: 0 } }, function (err, docs) 
     {
       if(docs.length === 0)
       {
@@ -164,12 +177,21 @@ export default class BasketScreen extends React.Component {
     this.props.navigation.addListener('willFocus', this.load)
   }
 
-  _keyExtractor = (item) => item._id;
+  _keyExtractor = (item) => item.id.toString();
 
   refreshFlatList = (deletedKey) => {
     this.setState((prevState) => {
         return {
           deletedRowKey: deletedKey
+        };
+    });
+    this.load();
+  }
+
+  refreshFlatListAndChanging = (changeKey) => {
+    this.setState((prevState) => {
+        return {
+          changeRowKey: changeKey
         };
     });
     this.load();
